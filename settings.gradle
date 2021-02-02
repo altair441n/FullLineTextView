@@ -1,4 +1,4 @@
+include ':library'
 include ':fulllinetextview'
-include ':fulllinetextview'
-include ':app'
+include ':example'
 rootProject.name = "FullLineTextView"
