@@ -1,0 +1,4 @@
+include ':fulllinetextview'
+include ':fulllinetextview'
+include ':app'
+rootProject.name = "FullLineTextView"
