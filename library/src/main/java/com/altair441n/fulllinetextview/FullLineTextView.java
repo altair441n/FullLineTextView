@@ -146,54 +146,68 @@ public class FullLineTextView extends TextView {
     }
 
     private void measureText(int widthMeasureSpec, int heightMeasureSpec) {
-        if (getLayoutParams().width == ViewGroup.LayoutParams.WRAP_CONTENT || getLayoutParams().height == ViewGroup.LayoutParams.WRAP_CONTENT) {
-            TextPaint paint = getPaint();
-            CharSequence text = getText();
-            int textHeight = getTextHeight();
-            int lineNum = 0;
-            int lineStart = 0;
-            int lineEnd;
-            float lineHeight = paint.getTextSize();
-            while (lineStart < text.length()) {
-                lineNum++;
-                CharSequence line;
-                if (lines.get(lineNum) != null) {
-                    line = lines.get(lineNum);
-                } else {
-                    line = getLine(getMeasuredWidth(), text.subSequence(lineStart, text.length()), paint);
-                    lines.put(lineNum, line);
-                }
-                lineEnd = lineStart + line.length();
-
-                if (lineNum == expandableMaxLines) {
-                    expandable = lineEnd != text.length();
-                    if (expandableListener != null) {
-                        expandableListener.isExpandable(expandable);
-                    }
-                    if (expandable && !expand) {
-                        lineHeight += textHeight;
-                        break;
-                    }
-                }
-
-                // 如果最后一行减去lastLineRightPadding放不下剩余文字则增加一行
-                if (lineEnd == text.length() && lineNum > expandableMaxLines && lastLineRightPadding > 0) {
-                    if (!cacheLineFeed) {
-                        needLineFeed = needLineFeed((int) (getMeasuredWidth() - lastLineRightPadding), text.subSequence(lineStart, text.length()), paint);
-                        cacheLineFeed = true;
-                    }
-                    if (needLineFeed) {
-                        lineHeight += textHeight;
-                    }
-                }
-
-                lineStart = lineEnd;
-                lineHeight += textHeight;
-            }
-            setMeasuredDimension(widthMeasureSpec, (int) (lineHeight - textHeight + getTextSpacing()));
-        } else {
+        if (getLayoutParams().width == ViewGroup.LayoutParams.MATCH_PARENT && getLayoutParams().height == ViewGroup.LayoutParams.MATCH_PARENT) {
             setMeasuredDimension(widthMeasureSpec, heightMeasureSpec);
+            return;
         }
+
+        TextPaint paint = getPaint();
+        CharSequence text = getText();
+        int textHeight = getTextHeight();
+        int lineNum = 0;
+        int lineStart = 0;
+        int lineEnd;
+        float lineHeight = paint.getTextSize();
+        while (lineStart < text.length()) {
+            lineNum++;
+            CharSequence line;
+            if (lines.get(lineNum) != null) {
+                line = lines.get(lineNum);
+            } else {
+                line = getLine(getMeasuredWidth(), text.subSequence(lineStart, text.length()), paint);
+                lines.put(lineNum, line);
+            }
+            lineEnd = lineStart + line.length();
+
+            if (lineNum == expandableMaxLines) {
+                expandable = lineEnd != text.length();
+                if (expandableListener != null) {
+                    expandableListener.isExpandable(expandable);
+                }
+                if (expandable && !expand) {
+                    lineHeight += textHeight;
+                    break;
+                }
+            }
+
+            // 如果最后一行减去lastLineRightPadding放不下剩余文字则增加一行
+            if (lineEnd == text.length() && lineNum > expandableMaxLines && lastLineRightPadding > 0) {
+                if (!cacheLineFeed) {
+                    needLineFeed = needLineFeed((int) (getMeasuredWidth() - lastLineRightPadding), text.subSequence(lineStart, text.length()), paint);
+                    cacheLineFeed = true;
+                }
+                if (needLineFeed) {
+                    lineHeight += textHeight;
+                }
+            }
+
+            lineStart = lineEnd;
+            lineHeight += textHeight;
+        }
+
+        int width;
+        int height;
+        if (getLayoutParams().width == ViewGroup.LayoutParams.WRAP_CONTENT) {
+            width = (lineNum == 1) ? (int) StaticLayout.getDesiredWidth(lines.get(1), paint) : widthMeasureSpec;
+        } else {
+            width = widthMeasureSpec;
+        }
+        if (getLayoutParams().height == ViewGroup.LayoutParams.WRAP_CONTENT) {
+            height = (int) (lineHeight - textHeight + getTextSpacing());
+        } else {
+            height = heightMeasureSpec;
+        }
+        setMeasuredDimension(width, height);
     }
 
     @Override
